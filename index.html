@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StreamSphere</title>
+    <meta
+      name="description"
+      content="A streaming-style movie website with a cinematic homepage, ranked shelves, and a dedicated watch page."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-frame">
+      <section class="hero hero-cinematic" id="featuredHero">
+        <div class="hero-overlay"></div>
+
+        <div class="page-shell page-shell-home">
+          <header class="topbar topbar-floating">
+            <a class="brand" href="#home">
+              <span class="brand-mark">S</span>
+              <span class="brand-copy">
+                <strong>StreamSphere</strong>
+                <span>watch movies and series</span>
+              </span>
+            </a>
+
+            <nav class="nav">
+              <a href="#home">Home</a>
+              <a href="#trending">Trending</a>
+              <a href="#top-rated">Top rated</a>
+              <a href="#genres">Genres</a>
+            </nav>
+
+            <div class="topbar-actions">
+              <label class="search-shell">
+                <span>Search</span>
+                <input id="searchInput" type="search" placeholder="Search movies, shows..." />
+              </label>
+              <button id="surpriseMeBtn" class="ghost-button">Random</button>
+            </div>
+          </header>
+
+          <main id="home" class="home-main">
+            <section class="hero-content">
+              <div class="hero-text-stack">
+                <div class="hero-kicker" id="heroKicker">Featured presentation</div>
+                <h1 id="heroTitle">Loading featured title</h1>
+                <div class="hero-meta-line" id="heroMeta"></div>
+                <p class="hero-summary" id="heroOverview"></p>
+                <div class="hero-actions">
+                  <button class="primary-button hero-play" data-watch-featured>Play now</button>
+                  <button class="secondary-button hero-more" id="copyFeaturedBtn">Copy embed</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="top-ten-section">
+              <div class="top-ten-heading">
+                <div class="top-ten-title">TOP 10</div>
+                <div class="top-ten-copy">
+                  <p>CONTENT</p>
+                  <p>TODAY</p>
+                </div>
+              </div>
+              <div class="top-ten-grid" id="topTenGrid"></div>
+            </section>
+          </main>
+        </div>
+      </section>
+
+      <section class="content-shelves">
+        <div class="page-shell">
+          <section class="shelf-section" id="latest-added">
+            <div class="shelf-header">
+              <h2>Latest Added</h2>
+              <div class="shelf-meta" id="resultsMeta">Newest titles first</div>
+            </div>
+            <div class="shelf-grid" id="latestGrid"></div>
+            <div class="empty-state" id="emptyState" hidden>
+              <strong>No titles found</strong>
+              <p>Try a different movie name, genre, year, or clear the search.</p>
+            </div>
+          </section>
+
+          <div class="inline-ad-wrap browse-only">
+            <div class="ad-slot ad-slot-inline" data-slot="inline"></div>
+          </div>
+
+          <section class="shelf-section browse-only" id="trending">
+            <div class="shelf-header">
+              <h2>Trending Today</h2>
+              <div class="shelf-tabs">
+                <button class="shelf-tab is-active" type="button">Movies</button>
+                <button class="shelf-tab" type="button">Series</button>
+              </div>
+            </div>
+            <div class="shelf-grid" id="trendingGrid"></div>
+          </section>
+
+          <section class="shelf-section browse-only" id="platforms">
+            <div class="shelf-header">
+              <h2>Featured Series</h2>
+              <div class="shelf-tabs">
+                <button class="shelf-tab is-active" type="button">Netflix</button>
+                <button class="shelf-tab" type="button">Prime</button>
+                <button class="shelf-tab" type="button">Max</button>
+                <button class="shelf-tab" type="button">Disney+</button>
+              </div>
+            </div>
+            <div class="shelf-grid" id="seriesGrid"></div>
+          </section>
+
+          <section class="shelf-section browse-only" id="top-rated">
+            <div class="shelf-header">
+              <h2>Top Rated</h2>
+              <div class="shelf-tabs">
+                <button class="shelf-tab is-active" type="button">Movies</button>
+                <button class="shelf-tab" type="button">Series</button>
+              </div>
+            </div>
+            <div class="shelf-grid" id="topRatedGrid"></div>
+          </section>
+
+          <section class="shelf-section browse-only" id="genres">
+            <div class="shelf-header">
+              <h2>Genres</h2>
+              <div class="filter-chips" id="genreFilters"></div>
+            </div>
+            <div class="shelf-grid" id="genreGrid"></div>
+          </section>
+
+          <footer class="site-footer">
+            <div>
+              <strong>StreamSphere</strong>
+              <p>Movies, series, ranked picks, and a dedicated watch page.</p>
+            </div>
+            <div class="footer-ad">
+              <div class="ad-slot ad-slot-footer" data-slot="leaderboard"></div>
+            </div>
+          </footer>
+        </div>
+      </section>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

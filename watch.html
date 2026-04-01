@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watch | StreamSphere</title>
+    <meta
+      name="description"
+      content="Dedicated watch page using VidKing embed routes and Videasy metadata APIs."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="watch-page-shell">
+      <div class="watch-backdrop" id="watchBackdrop"></div>
+      <header class="watch-topbar">
+        <a class="brand" href="./index.html">
+          <span class="brand-mark">S</span>
+          <span class="brand-copy">
+            <strong>StreamSphere</strong>
+            <span>back to catalogue</span>
+          </span>
+        </a>
+        <div class="watch-actions">
+          <a id="openDirectLink" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer">
+            Open direct player
+          </a>
+        </div>
+      </header>
+
+      <main class="watch-page-content">
+        <section class="watch-player-stack">
+          <div class="watch-ad-band">
+            <div class="ad-slot" data-slot="watchTop"></div>
+          </div>
+          <div class="player-frame-shell watch-frame">
+            <iframe
+              id="watchFrame"
+              title="VidKing Player"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+              loading="eager"
+              referrerpolicy="origin"
+            ></iframe>
+          </div>
+        </section>
+
+        <section class="watch-detail-section">
+          <div class="watch-detail-main sidebar-card">
+            <p class="panel-label" id="watchType">Loading type</p>
+            <h1 id="watchTitle">Loading title...</h1>
+            <div class="watch-facts" id="watchFacts"></div>
+            <p id="watchSummary">
+              Pulling metadata from the Videasy database API and preparing the VidKing embed route.
+            </p>
+            <div class="chip-row" id="watchChips"></div>
+            <div class="watch-detail-actions">
+              <a id="openDirectLinkInline" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer">
+                Open direct player
+              </a>
+            </div>
+          </div>
+
+          <aside class="watch-detail-side">
+            <div class="sidebar-card">
+              <p class="panel-label">Sponsored</p>
+              <h3>Ad placement</h3>
+              <div class="ad-slot" data-slot="watchRail"></div>
+            </div>
+
+            <div class="sidebar-card">
+              <p class="panel-label">Connection details</p>
+              <h3>Current embed URL</h3>
+              <pre class="message-area" id="watchUrl"></pre>
+            </div>
+          </aside>
+        </section>
+
+        <section class="related-section">
+          <div class="shelf-header">
+            <h2 id="relatedHeading">Related titles</h2>
+            <div class="shelf-meta" id="relatedMeta">Loading suggestions...</div>
+          </div>
+          <div class="shelf-grid related-grid" id="relatedGrid"></div>
+        </section>
+
+        <section class="watch-utility">
+          <div class="sidebar-card">
+            <p class="panel-label">Player events</p>
+            <h3>PostMessage feed</h3>
+            <pre class="message-area" id="watchEvents">Waiting for player events...</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./watch.js"></script>
+  </body>
+</html>
