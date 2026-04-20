@@ -2,18 +2,29 @@ const params = new URLSearchParams(window.location.search);
 
 const watchFrame = document.querySelector("#watchFrame");
 const watchBackdrop = document.querySelector("#watchBackdrop");
+const watchPoster = document.querySelector("#watchPoster");
+const watchHeroCard = document.querySelector("#watchHeroCard");
+const watchPlayerShell = document.querySelector("#watchPlayerShell");
+const playInlineBtn = document.querySelector("#playInlineBtn");
+const backToDetailsBtn = document.querySelector("#backToDetailsBtn");
 const openDirectLink = document.querySelector("#openDirectLink");
 const openDirectLinkInline = document.querySelector("#openDirectLinkInline");
 const watchType = document.querySelector("#watchType");
 const watchTitle = document.querySelector("#watchTitle");
+const watchDetailTitle = document.querySelector("#watchDetailTitle");
 const watchSummary = document.querySelector("#watchSummary");
+const watchDetailSummary = document.querySelector("#watchDetailSummary");
 const watchChips = document.querySelector("#watchChips");
+const watchDetailChips = document.querySelector("#watchDetailChips");
 const watchFacts = document.querySelector("#watchFacts");
-const watchUrl = document.querySelector("#watchUrl");
+const watchDetailFacts = document.querySelector("#watchDetailFacts");
 const watchEvents = document.querySelector("#watchEvents");
+const watchUrl = document.querySelector("#watchUrl");
 const relatedHeading = document.querySelector("#relatedHeading");
 const relatedMeta = document.querySelector("#relatedMeta");
 const relatedGrid = document.querySelector("#relatedGrid");
+const playInlineBtnSecondary = document.querySelector("#playInlineBtnSecondary");
+const openDirectLinkDetail = document.querySelector("#openDirectLinkDetail");
 const adConfig = window.streamSphereConfig?.adConfig || {
   provider: "placeholder",
   enableAutoAds: false,
@@ -30,6 +41,7 @@ const autoPlay = params.get("autoPlay") || "true";
 const nextEpisode = params.get("nextEpisode") || "true";
 const episodeSelector = params.get("episodeSelector") || "true";
 const progress = params.get("progress") || "";
+let playerInitialized = false;
 
 function buildEmbedUrl() {
   const base =
@@ -113,19 +125,23 @@ async function fetchRecommendations() {
 
 function renderChips(entries) {
   watchChips.innerHTML = "";
+  watchDetailChips.innerHTML = "";
   entries.forEach((entry) => {
     const chip = document.createElement("span");
     chip.textContent = entry;
     watchChips.appendChild(chip);
+    watchDetailChips.appendChild(chip.cloneNode(true));
   });
 }
 
 function renderFacts(entries) {
   watchFacts.innerHTML = "";
+  watchDetailFacts.innerHTML = "";
   entries.forEach((entry) => {
     const fact = document.createElement("span");
     fact.textContent = entry;
     watchFacts.appendChild(fact);
+    watchDetailFacts.appendChild(fact.cloneNode(true));
   });
 }
 
@@ -293,11 +309,26 @@ function pushAds() {
   });
 }
 
+function openInlinePlayer() {
+  if (!playerInitialized) {
+    watchFrame.src = buildEmbedUrl();
+    playerInitialized = true;
+  }
+  watchHeroCard.hidden = true;
+  watchPlayerShell.hidden = false;
+  watchPlayerShell.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showDetailBanner() {
+  watchPlayerShell.hidden = true;
+  watchHeroCard.hidden = false;
+}
+
 async function initWatchPage() {
   const embedUrl = buildEmbedUrl();
-  watchFrame.src = embedUrl;
   openDirectLink.href = embedUrl;
   openDirectLinkInline.href = embedUrl;
+  openDirectLinkDetail.href = embedUrl;
   watchUrl.textContent = embedUrl;
   watchType.textContent = mediaType === "movie" ? "Movie stream" : "TV episode stream";
 
@@ -306,9 +337,14 @@ async function initWatchPage() {
 
     if (mediaType === "movie") {
       watchTitle.textContent = metadata.title;
+      watchDetailTitle.textContent = metadata.title;
       watchSummary.textContent = metadata.overview || "No summary returned by the metadata API.";
+      watchDetailSummary.textContent = metadata.overview || "No summary returned by the metadata API.";
       if (metadata.backdrop_path) {
         watchBackdrop.style.backgroundImage = `linear-gradient(180deg, rgba(7, 11, 18, 0.15), rgba(7, 11, 18, 0.94)), url(https://image.tmdb.org/t/p/original${metadata.backdrop_path})`;
+      }
+      if (metadata.poster_path) {
+        watchPoster.style.backgroundImage = `url(https://image.tmdb.org/t/p/w780${metadata.poster_path})`;
       }
       renderFacts([
         metadata.release_date ? metadata.release_date.slice(0, 4) : "Unknown year",
@@ -321,10 +357,16 @@ async function initWatchPage() {
     }
 
     watchTitle.textContent = `${metadata.showData.name} • S${season}E${episode}`;
+    watchDetailTitle.textContent = `${metadata.showData.name} • S${season}E${episode}`;
     watchSummary.textContent =
+      metadata.episodeData.overview || "No episode summary returned by the metadata API.";
+    watchDetailSummary.textContent =
       metadata.episodeData.overview || "No episode summary returned by the metadata API.";
     if (metadata.showData.backdrop_path) {
       watchBackdrop.style.backgroundImage = `linear-gradient(180deg, rgba(7, 11, 18, 0.15), rgba(7, 11, 18, 0.94)), url(https://image.tmdb.org/t/p/original${metadata.showData.backdrop_path})`;
+    }
+    if (metadata.showData.poster_path) {
+      watchPoster.style.backgroundImage = `url(https://image.tmdb.org/t/p/w780${metadata.showData.poster_path})`;
     }
     renderFacts([
       metadata.showData.first_air_date
@@ -338,7 +380,10 @@ async function initWatchPage() {
   } catch (error) {
     console.error(error);
     watchTitle.textContent = "Unable to load metadata";
+    watchDetailTitle.textContent = "Unable to load metadata";
     watchSummary.textContent =
+      "The embed URL was still generated, but the metadata API request failed. Serve the site over HTTP and confirm the ID is valid.";
+    watchDetailSummary.textContent =
       "The embed URL was still generated, but the metadata API request failed. Serve the site over HTTP and confirm the ID is valid.";
     renderFacts(["Check TMDB ID", "Serve over HTTP", "See console"]);
     renderChips(["Metadata unavailable"]);
@@ -359,4 +404,7 @@ window.addEventListener("message", (event) => {
 });
 
 renderAds();
+playInlineBtn.addEventListener("click", openInlinePlayer);
+playInlineBtnSecondary.addEventListener("click", openInlinePlayer);
+backToDetailsBtn.addEventListener("click", showDetailBanner);
 initWatchPage();

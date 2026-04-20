@@ -200,6 +200,15 @@ const adConfig = window.streamSphereConfig?.adConfig || {
 };
 
 const searchInput = document.querySelector("#searchInput");
+const openSearchBtn = document.querySelector("#openSearchBtn");
+const countrySelect = document.querySelector("#countrySelect");
+const closeSearchBtn = document.querySelector("#closeSearchBtn");
+const closeSearchBackdrop = document.querySelector("#closeSearchBackdrop");
+const clearSearchBtn = document.querySelector("#clearSearchBtn");
+const searchModal = document.querySelector("#searchModal");
+const searchTypeSelect = document.querySelector("#searchTypeSelect");
+const searchResultsList = document.querySelector("#searchResultsList");
+const searchResultsMeta = document.querySelector("#searchResultsMeta");
 const surpriseMeBtn = document.querySelector("#surpriseMeBtn");
 const genreFilters = document.querySelector("#genreFilters");
 const heroTitle = document.querySelector("#heroTitle");
@@ -210,17 +219,41 @@ const featuredHero = document.querySelector("#featuredHero");
 const topTenGrid = document.querySelector("#topTenGrid");
 const latestGrid = document.querySelector("#latestGrid");
 const trendingGrid = document.querySelector("#trendingGrid");
-const seriesGrid = document.querySelector("#seriesGrid");
+const providerGrid = document.querySelector("#providerGrid");
 const topRatedGrid = document.querySelector("#topRatedGrid");
 const genreGrid = document.querySelector("#genreGrid");
 const copyFeaturedBtn = document.querySelector("#copyFeaturedBtn");
 const emptyState = document.querySelector("#emptyState");
 const resultsMeta = document.querySelector("#resultsMeta");
 const browseOnlySections = document.querySelectorAll(".browse-only");
+const providerTabs = document.querySelector("#providerTabs");
 
 let activeGenre = "All";
 let searchTerm = "";
 let searchDebounceId = null;
+let liveTopTenItems = [];
+let liveTrendingMovieItems = [];
+let liveTrendingSeriesItems = [];
+let activeProvider = "netflix";
+let latestApiItems = [];
+let selectedCountry = window.localStorage.getItem("streamSphereCountry") || "US";
+
+const countryNames = {
+  US: "USA",
+  IN: "India",
+  CN: "China",
+  GB: "UK",
+  KR: "South Korea",
+  JP: "Japan",
+};
+
+const providerCollections = {
+  netflix: [catalog[1].items[0], catalog[1].items[2], catalog[1].items[4], catalog[1].items[1], catalog[2].items[3]],
+  prime: [catalog[0].items[0], catalog[0].items[4], catalog[2].items[4], catalog[2].items[0], catalog[1].items[3]],
+  max: [catalog[1].items[3], catalog[1].items[0], catalog[2].items[1], catalog[2].items[3], catalog[0].items[3]],
+  disney: [catalog[0].items[2], catalog[0].items[4], catalog[0].items[0], catalog[2].items[4], catalog[2].items[1]],
+  apple: [catalog[1].items[1], catalog[1].items[0], catalog[2].items[4], catalog[2].items[0], catalog[0].items[1]],
+};
 
 function normalizeItems() {
   return catalog
@@ -230,6 +263,15 @@ function normalizeItems() {
         addedRank: sectionIndex * 100 + itemIndex,
       }))
     );
+}
+
+function getCurrentCountryName() {
+  return countryNames[selectedCountry] || selectedCountry;
+}
+
+function buildApiRoute(path, params = {}) {
+  const searchParams = new URLSearchParams({ language: "en-US", ...params });
+  return `https://db.videasy.net/3${path}?${searchParams.toString()}`;
 }
 
 function buildEmbedUrl(item) {
@@ -269,12 +311,38 @@ function buildWatchPageUrl(item) {
   return `./watch.html?${watchParams.toString()}`;
 }
 
+function mapApiResultToItem(result) {
+  const mediaType = result.media_type === "tv" || result.name ? "tv" : "movie";
+  const title = result.title || result.name || "Untitled";
+  const yearSource = result.release_date || result.first_air_date || "";
+  const imagePath = result.poster_path || result.backdrop_path || "";
+
+  return {
+    title,
+    mediaType,
+    tmdbId: String(result.id),
+    season: "1",
+    episode: "1",
+    year: yearSource ? yearSource.slice(0, 4) : "Unknown",
+    rating: String(Number(result.vote_average || 0).toFixed(1)),
+    genres: [mediaType === "movie" ? "Movie" : "Series"],
+    image: imagePath
+      ? `https://image.tmdb.org/t/p/w780${imagePath}`
+      : "https://placehold.co/500x750/111111/f2f2f2?text=No+Image",
+    overview: result.overview || "No summary available.",
+    params:
+      mediaType === "movie"
+        ? { color: "ff6a3d", autoPlay: true }
+        : { color: "ff6a3d", nextEpisode: true, episodeSelector: true },
+  };
+}
+
 function openPlayer(item) {
   window.location.href = buildWatchPageUrl(item);
 }
 
 function getFeaturedItem() {
-  return catalog[0].items[0];
+  return liveTopTenItems[0] || catalog[0].items[0];
 }
 
 function matchesFilters(item) {
@@ -312,8 +380,9 @@ function renderHero() {
 
 function renderTopTen() {
   topTenGrid.innerHTML = "";
-  sortLatestFirst(normalizeItems())
-    .slice(0, 5)
+  const items = (liveTopTenItems.length ? liveTopTenItems : sortLatestFirst(normalizeItems())).slice(0, 10);
+
+  items
     .forEach((item, index) => {
       const article = document.createElement("article");
       article.className = "top-ten-card";
@@ -347,31 +416,7 @@ function createShelfCard(item) {
 }
 
 function mapSearchResultToItem(result) {
-  const mediaType = result.media_type === "tv" ? "tv" : "movie";
-  const title = result.title || result.name || "Untitled";
-  const yearSource = result.release_date || result.first_air_date || "";
-  const year = yearSource ? yearSource.slice(0, 4) : "Unknown";
-  const imagePath = result.backdrop_path || result.poster_path || "";
-  const image = imagePath
-    ? `https://image.tmdb.org/t/p/w780${imagePath}`
-    : "https://placehold.co/780x440/111111/f2f2f2?text=No+Image";
-
-  return {
-    title,
-    mediaType,
-    tmdbId: String(result.id),
-    season: "1",
-    episode: "1",
-    year,
-    rating: String(Number(result.vote_average || 0).toFixed(1)),
-    genres: [mediaType === "movie" ? "Movie" : "Series"],
-    image,
-    overview: result.overview || "No summary available.",
-    params:
-      mediaType === "movie"
-        ? { color: "ff6a3d", autoPlay: true }
-        : { color: "ff6a3d", nextEpisode: true, episodeSelector: true },
-  };
+  return mapApiResultToItem(result);
 }
 
 function renderShelf(target, items) {
@@ -403,25 +448,40 @@ function renderGenreFilters() {
   });
 }
 
+function renderProviderShelf() {
+  providerGrid.innerHTML = "";
+  const items =
+    activeProvider === "netflix"
+      ? liveTrendingSeriesItems.length
+        ? liveTrendingSeriesItems
+        : providerCollections[activeProvider] || []
+      : providerCollections[activeProvider] || [];
+
+  items.forEach((item) => {
+    providerGrid.appendChild(createShelfCard(item));
+  });
+}
+
 function renderShelves() {
   const allItems = normalizeItems();
-  const filteredAll = sortLatestFirst(allItems.filter(matchesFilters));
+  const latestPool = latestApiItems.length ? latestApiItems : allItems;
+  const filteredAll = sortLatestFirst(latestPool.filter(matchesFilters));
 
   latestGrid.innerHTML = "";
   filteredAll.forEach((item) => {
     latestGrid.appendChild(createShelfCard(item));
   });
 
-  renderShelf(trendingGrid, catalog[0].items);
-  renderShelf(seriesGrid, catalog[1].items);
+  renderShelf(trendingGrid, liveTrendingMovieItems.length ? liveTrendingMovieItems : catalog[0].items);
+  renderProviderShelf();
   renderShelf(topRatedGrid, catalog[2].items);
   renderShelf(genreGrid, allItems);
 
   const totalMatches = filteredAll.length;
-  const totalItems = allItems.length;
+  const totalItems = latestPool.length;
   resultsMeta.textContent = searchTerm.trim()
     ? `${totalMatches} result${totalMatches === 1 ? "" : "s"} for "${searchTerm.trim()}"`
-    : `Newest titles first • ${totalItems} total`;
+    : `Newest titles first in ${getCurrentCountryName()} • ${totalItems} total`;
 
   emptyState.hidden = totalMatches !== 0;
 }
@@ -429,24 +489,27 @@ function renderShelves() {
 async function renderApiSearch() {
   const query = searchTerm.trim();
   if (!query) {
-    browseOnlySections.forEach((section) => {
-      section.hidden = false;
-    });
-    renderShelves();
+    searchResultsList.innerHTML = "";
+    searchResultsMeta.textContent = "Start typing to search the library";
     return;
   }
-
-  browseOnlySections.forEach((section) => {
-    section.hidden = true;
-  });
-
-  resultsMeta.textContent = `Searching for "${query}"...`;
-  latestGrid.innerHTML = "";
-  emptyState.hidden = true;
+  searchResultsMeta.textContent = `Searching for "${query}"...`;
+  searchResultsList.innerHTML = "";
 
   try {
+    const type = searchTypeSelect.value;
+    const endpoint =
+      type === "movie"
+        ? "movie"
+        : type === "tv"
+          ? "tv"
+          : "multi";
     const response = await fetch(
-      `https://db.videasy.net/3/search/multi?query=${encodeURIComponent(query)}&language=en-US&page=1`
+      buildApiRoute(`/search/${endpoint}`, {
+        query,
+        page: "1",
+        region: selectedCountry,
+      })
     );
 
     if (!response.ok) {
@@ -455,24 +518,51 @@ async function renderApiSearch() {
 
     const payload = await response.json();
     const items = (payload.results || [])
+      .map((result) => ({
+        ...result,
+        media_type:
+          result.media_type || (type === "movie" ? "movie" : type === "tv" ? "tv" : result.media_type),
+      }))
       .filter((result) => result.media_type === "movie" || result.media_type === "tv")
       .map(mapSearchResultToItem)
-      .filter(matchesFilters);
+      .slice(0, 12);
 
-    resultsMeta.textContent = `${items.length} result${items.length === 1 ? "" : "s"} for "${query}"`;
+    searchResultsMeta.textContent = `${items.length} result${items.length === 1 ? "" : "s"} for "${query}"`;
 
     if (!items.length) {
-      emptyState.hidden = false;
+      searchResultsList.innerHTML = `
+        <div class="search-empty-state">
+          <strong>No results found</strong>
+          <p>Try another title or switch between movies and TV shows.</p>
+        </div>
+      `;
       return;
     }
 
     items.forEach((item) => {
-      latestGrid.appendChild(createShelfCard(item));
+      const result = document.createElement("button");
+      result.type = "button";
+      result.className = "search-result-item";
+      result.innerHTML = `
+        <span class="search-result-poster" style="background-image:url('${item.image}')"></span>
+        <span class="search-result-copy">
+          <strong>${item.title}</strong>
+          <span>${item.mediaType === "movie" ? "Movie" : "TV Show"} | ${item.year} | ${item.rating}</span>
+          <small>${item.overview}</small>
+        </span>
+      `;
+      result.addEventListener("click", () => openPlayer(item));
+      searchResultsList.appendChild(result);
     });
   } catch (error) {
     console.error("API search failed", error);
-    resultsMeta.textContent = `Search failed for "${query}"`;
-    emptyState.hidden = false;
+    searchResultsMeta.textContent = `Search failed for "${query}"`;
+    searchResultsList.innerHTML = `
+      <div class="search-empty-state">
+        <strong>Search failed</strong>
+        <p>Please try again in a moment.</p>
+      </div>
+    `;
   }
 }
 
@@ -532,12 +622,203 @@ function pushAds() {
   });
 }
 
+async function fetchLiveTopTen() {
+  try {
+    const response = await fetch(
+      buildApiRoute("/trending/all/day", {
+        region: selectedCountry,
+      })
+    );
+    if (!response.ok) {
+      throw new Error(`Trending API failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    liveTopTenItems = (payload.results || [])
+      .filter((item) => item.media_type === "movie" || item.media_type === "tv")
+      .slice(0, 10)
+      .map(mapApiResultToItem);
+
+    return liveTopTenItems;
+  } catch (error) {
+    console.error("Unable to refresh Top 10 from API", error);
+    return [];
+  }
+}
+
+async function fetchLiveTrendingMovies() {
+  try {
+    const response = await fetch(
+      buildApiRoute("/trending/movie/day", {
+        region: selectedCountry,
+      })
+    );
+    if (!response.ok) {
+      throw new Error(`Trending movies API failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    liveTrendingMovieItems = (payload.results || []).slice(0, 10).map(mapApiResultToItem);
+    return liveTrendingMovieItems;
+  } catch (error) {
+    console.error("Unable to refresh Trending Today from API", error);
+    return [];
+  }
+}
+
+async function fetchLiveTrendingSeries() {
+  try {
+    const response = await fetch(
+      buildApiRoute("/trending/tv/day", {
+        region: selectedCountry,
+      })
+    );
+    if (!response.ok) {
+      throw new Error(`Trending TV API failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    liveTrendingSeriesItems = (payload.results || []).slice(0, 10).map(mapApiResultToItem);
+    return liveTrendingSeriesItems;
+  } catch (error) {
+    console.error("Unable to refresh Featured Series from API", error);
+    return [];
+  }
+}
+
+async function fetchLatestByCountry() {
+  try {
+    const [movieResponse, tvResponse] = await Promise.all([
+      fetch(
+        buildApiRoute("/discover/movie", {
+          sort_by: "primary_release_date.desc",
+          region: selectedCountry,
+          page: "1",
+        })
+      ),
+      fetch(
+        buildApiRoute("/discover/tv", {
+          sort_by: "first_air_date.desc",
+          with_origin_country: selectedCountry,
+          page: "1",
+        })
+      ),
+    ]);
+
+    if (!movieResponse.ok || !tvResponse.ok) {
+      throw new Error(`Latest API failed: ${movieResponse.status}/${tvResponse.status}`);
+    }
+
+    const [moviePayload, tvPayload] = await Promise.all([
+      movieResponse.json(),
+      tvResponse.json(),
+    ]);
+
+    latestApiItems = [...(moviePayload.results || []), ...(tvPayload.results || [])]
+      .filter((item) => item.id)
+      .map((item) => ({
+        ...item,
+        media_type: item.media_type || (item.title ? "movie" : "tv"),
+      }))
+      .map(mapApiResultToItem)
+      .map((item, index) => ({
+        ...item,
+        addedRank: 1000 - index,
+      }))
+      .slice(0, 24);
+
+    return latestApiItems;
+  } catch (error) {
+    console.error("Unable to load latest titles by country", error);
+    latestApiItems = [];
+    return [];
+  }
+}
+
+function renderHomepage() {
+  renderHero();
+  renderTopTen();
+  renderGenreFilters();
+  renderShelves();
+}
+
+async function initHomepage() {
+  countrySelect.value = selectedCountry;
+  renderAds();
+
+  await Promise.allSettled([
+    fetchLatestByCountry(),
+    fetchLiveTopTen(),
+    fetchLiveTrendingMovies(),
+    fetchLiveTrendingSeries(),
+  ]);
+
+  renderHomepage();
+
+  window.setInterval(async () => {
+    await fetchLatestByCountry();
+    renderShelves();
+  }, 30 * 60 * 1000);
+
+  window.setInterval(async () => {
+    await fetchLiveTopTen();
+    renderHero();
+    renderTopTen();
+  }, 30 * 60 * 1000);
+
+  window.setInterval(async () => {
+    await fetchLiveTrendingMovies();
+    renderShelves();
+  }, 30 * 60 * 1000);
+
+  window.setInterval(async () => {
+    await fetchLiveTrendingSeries();
+    renderShelves();
+  }, 30 * 60 * 1000);
+}
+
+function openSearchModal() {
+  searchModal.hidden = false;
+  document.body.classList.add("modal-open");
+  setTimeout(() => {
+    searchInput.focus();
+  }, 0);
+}
+
+function closeSearchModal() {
+  searchModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
 searchInput.addEventListener("input", (event) => {
   searchTerm = event.target.value;
   clearTimeout(searchDebounceId);
   searchDebounceId = setTimeout(() => {
     renderApiSearch();
   }, 250);
+});
+
+searchTypeSelect.addEventListener("change", () => {
+  if (searchTerm.trim()) {
+    renderApiSearch();
+  }
+});
+
+openSearchBtn.addEventListener("click", openSearchModal);
+closeSearchBtn.addEventListener("click", closeSearchModal);
+closeSearchBackdrop.addEventListener("click", closeSearchModal);
+clearSearchBtn.addEventListener("click", () => {
+  searchInput.value = "";
+  searchTerm = "";
+  searchResultsList.innerHTML = "";
+  searchResultsMeta.textContent = "Start typing to search the library";
+  searchInput.focus();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !searchModal.hidden) {
+    closeSearchModal();
+  }
 });
 
 surpriseMeBtn.addEventListener("click", () => {
@@ -563,8 +844,36 @@ copyFeaturedBtn.addEventListener("click", async () => {
   }
 });
 
-renderHero();
-renderTopTen();
-renderGenreFilters();
-renderShelves();
-renderAds();
+providerTabs.querySelectorAll("[data-provider]").forEach((button) => {
+  button.addEventListener("click", () => {
+    activeProvider = button.dataset.provider;
+    providerTabs.querySelectorAll("[data-provider]").forEach((tab) => {
+      tab.classList.toggle("is-active", tab === button);
+    });
+    renderProviderShelf();
+  });
+});
+
+countrySelect.addEventListener("change", async (event) => {
+  selectedCountry = event.target.value;
+  window.localStorage.setItem("streamSphereCountry", selectedCountry);
+  latestApiItems = [];
+  liveTopTenItems = [];
+  liveTrendingMovieItems = [];
+  liveTrendingSeriesItems = [];
+
+  await Promise.allSettled([
+    fetchLatestByCountry(),
+    fetchLiveTopTen(),
+    fetchLiveTrendingMovies(),
+    fetchLiveTrendingSeries(),
+  ]);
+
+  renderHomepage();
+
+  if (searchTerm.trim()) {
+    renderApiSearch();
+  }
+});
+
+initHomepage();

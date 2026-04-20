@@ -11,12 +11,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904848490486830"
-     crossorigin="anonymous"></script>
   </head>
   <body>
     <div class="watch-page-shell">
@@ -37,33 +35,63 @@
       </header>
 
       <main class="watch-page-content">
-        <section class="watch-player-stack">
+        <section class="watch-stage">
           <div class="watch-ad-band">
             <div class="ad-slot" data-slot="watchTop"></div>
           </div>
-          <div class="player-frame-shell watch-frame">
-            <iframe
-              id="watchFrame"
-              title="VidKing Player"
-              allow="autoplay; fullscreen"
-              allowfullscreen
-              loading="eager"
-              referrerpolicy="origin"
-            ></iframe>
+
+          <div class="watch-stage-shell">
+            <section class="watch-hero-card" id="watchHeroCard">
+              <div class="watch-hero-poster" id="watchPoster"></div>
+              <div class="watch-hero-copy">
+                <p class="panel-label" id="watchType">Loading type</p>
+                <h1 id="watchTitle">Loading title...</h1>
+                <div class="watch-facts" id="watchFacts"></div>
+                <p id="watchSummary">
+                  Pulling metadata from the Videasy database API and preparing the VidKing embed route.
+                </p>
+                <div class="chip-row" id="watchChips"></div>
+                <div class="watch-hero-actions">
+                  <button id="playInlineBtn" class="primary-button watch-inline-play" type="button">
+                    Play now
+                  </button>
+                  <a id="openDirectLinkInline" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer">
+                    Open direct player
+                  </a>
+                </div>
+              </div>
+            </section>
+
+            <div class="player-frame-shell watch-frame" id="watchPlayerShell" hidden>
+              <div class="watch-player-toolbar">
+                <button id="backToDetailsBtn" class="ghost-button" type="button">Back to details</button>
+              </div>
+              <iframe
+                id="watchFrame"
+                title="VidKing Player"
+                allow="autoplay; fullscreen"
+                allowfullscreen
+                loading="eager"
+                referrerpolicy="origin"
+              ></iframe>
+            </div>
           </div>
         </section>
 
         <section class="watch-detail-section">
           <div class="watch-detail-main sidebar-card">
-            <p class="panel-label" id="watchType">Loading type</p>
-            <h1 id="watchTitle">Loading title...</h1>
-            <div class="watch-facts" id="watchFacts"></div>
-            <p id="watchSummary">
+            <p class="panel-label">Overview</p>
+            <h2 id="watchDetailTitle">Loading title...</h2>
+            <div class="watch-facts watch-detail-facts" id="watchDetailFacts"></div>
+            <div class="chip-row watch-detail-chips" id="watchDetailChips"></div>
+            <p id="watchDetailSummary">
               Pulling metadata from the Videasy database API and preparing the VidKing embed route.
             </p>
-            <div class="chip-row" id="watchChips"></div>
-            <div class="watch-detail-actions">
-              <a id="openDirectLinkInline" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer">
+            <div class="watch-hero-actions">
+              <button id="playInlineBtnSecondary" class="primary-button watch-inline-play" type="button">
+                Play now
+              </button>
+              <a id="openDirectLinkDetail" class="secondary-button" href="#" target="_blank" rel="noopener noreferrer">
                 Open direct player
               </a>
             </div>
@@ -74,12 +102,6 @@
               <p class="panel-label">Sponsored</p>
               <h3>Ad placement</h3>
               <div class="ad-slot" data-slot="watchRail"></div>
-            </div>
-
-            <div class="sidebar-card">
-              <p class="panel-label">Connection details</p>
-              <h3>Current embed URL</h3>
-              <pre class="message-area" id="watchUrl"></pre>
             </div>
           </aside>
         </section>
@@ -93,11 +115,19 @@
         </section>
 
         <section class="watch-utility">
-          <div class="sidebar-card">
-            <p class="panel-label">Player events</p>
-            <h3>PostMessage feed</h3>
-            <pre class="message-area" id="watchEvents">Waiting for player events...</pre>
-          </div>
+          <details class="sidebar-card diagnostics-card">
+            <summary>Player diagnostics</summary>
+            <div class="diagnostics-grid">
+              <div>
+                <p class="panel-label">Current embed URL</p>
+                <pre class="message-area" id="watchUrl"></pre>
+              </div>
+              <div>
+                <p class="panel-label">Player events</p>
+                <pre class="message-area" id="watchEvents">Waiting for player events...</pre>
+              </div>
+            </div>
+          </details>
         </section>
       </main>
     </div>

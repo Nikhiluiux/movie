@@ -15,8 +15,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904848490486830"
-     crossorigin="anonymous"></script>
   </head>
   <body>
     <div class="site-frame">
@@ -41,10 +39,21 @@
             </nav>
 
             <div class="topbar-actions">
-              <label class="search-shell">
-                <span>Search</span>
-                <input id="searchInput" type="search" placeholder="Search movies, shows..." />
+              <label class="country-select-shell" aria-label="Select country">
+                <span>Country</span>
+                <select id="countrySelect" class="country-select">
+                  <option value="US">USA</option>
+                  <option value="IN">India</option>
+                  <option value="CN">China</option>
+                  <option value="GB">UK</option>
+                  <option value="KR">South Korea</option>
+                  <option value="JP">Japan</option>
+                </select>
               </label>
+              <button id="openSearchBtn" class="search-shell search-trigger" type="button">
+                <span>Search</span>
+                <strong>Movies & TV Shows</strong>
+              </button>
               <button id="surpriseMeBtn" class="ghost-button">Random</button>
             </div>
           </header>
@@ -108,15 +117,16 @@
 
           <section class="shelf-section browse-only" id="platforms">
             <div class="shelf-header">
-              <h2>Featured Series</h2>
-              <div class="shelf-tabs">
-                <button class="shelf-tab is-active" type="button">Netflix</button>
-                <button class="shelf-tab" type="button">Prime</button>
-                <button class="shelf-tab" type="button">Max</button>
-                <button class="shelf-tab" type="button">Disney+</button>
+              <h2>Streaming Platforms</h2>
+              <div class="shelf-tabs" id="providerTabs">
+                <button class="shelf-tab is-active" type="button" data-provider="netflix">Netflix</button>
+                <button class="shelf-tab" type="button" data-provider="prime">Prime</button>
+                <button class="shelf-tab" type="button" data-provider="max">Max</button>
+                <button class="shelf-tab" type="button" data-provider="disney">Disney+</button>
+                <button class="shelf-tab" type="button" data-provider="apple">Apple TV+</button>
               </div>
             </div>
-            <div class="shelf-grid" id="seriesGrid"></div>
+            <div class="shelf-grid" id="providerGrid"></div>
           </section>
 
           <section class="shelf-section browse-only" id="top-rated">
@@ -149,6 +159,37 @@
           </footer>
         </div>
       </section>
+    </div>
+
+    <div class="search-modal" id="searchModal" hidden>
+      <div class="search-modal-backdrop" id="closeSearchBackdrop"></div>
+      <div class="search-modal-panel">
+        <div class="search-modal-head">
+          <div>
+            <p class="panel-label">Search</p>
+            <h2>Find something to watch</h2>
+          </div>
+          <div class="search-head-actions">
+            <select id="searchTypeSelect" class="search-type-select">
+              <option value="multi">Movies & TV Shows</option>
+              <option value="movie">Movies</option>
+              <option value="tv">TV Shows</option>
+            </select>
+            <button id="closeSearchBtn" class="ghost-button" type="button">Close</button>
+          </div>
+        </div>
+
+        <label class="search-modal-input">
+          <span>Search query</span>
+          <input id="searchInput" type="search" placeholder="Type a movie or TV show title..." />
+          <button id="clearSearchBtn" class="search-clear-btn" type="button">Clear</button>
+        </label>
+
+        <div class="search-modal-results">
+          <div class="search-results-meta" id="searchResultsMeta">Start typing to search the library</div>
+          <div class="search-results-list" id="searchResultsList"></div>
+        </div>
+      </div>
     </div>
 
     <script src="./config.js"></script>
